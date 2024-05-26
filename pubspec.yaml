@@ -52,6 +52,7 @@ dependencies:
   share_plus: ^9.0.0
   pull_down_button: ^0.9.4
   gal: ^2.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

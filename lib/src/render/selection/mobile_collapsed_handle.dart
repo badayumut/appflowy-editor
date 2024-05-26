@@ -23,13 +23,13 @@ class MobileCollapsedHandle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (Platform.isIOS) {
+    if (Platform.isAndroid) {
       return _IOSCollapsedHandle(
         layerLink: layerLink,
         rect: rect,
         handleWidth: handleWidth,
       );
-    } else if (Platform.isAndroid) {
+    } else if (Platform.isLinux) {
       return _AndroidCollapsedHandle(
         layerLink: layerLink,
         rect: rect,
