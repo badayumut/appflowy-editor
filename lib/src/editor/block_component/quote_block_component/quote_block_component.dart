@@ -1,5 +1,6 @@
 import 'package:appflowy_editor/appflowy_editor.dart';
 import 'package:appflowy_editor/src/editor/block_component/base_component/block_icon_builder.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -196,8 +197,13 @@ class _QuoteIcon extends StatelessWidget {
           const BoxConstraints(minWidth: 26, minHeight: 22) * textScaleFactor,
       padding: const EdgeInsets.only(right: 4.0),
       child: Container(
+        decoration: BoxDecoration(
+            //if dark mode red color else white color write function
+            color: Theme.of(context).brightness == Brightness.light
+                ? CupertinoColors.opaqueSeparator
+                : CupertinoColors.systemGrey,
+            borderRadius: const BorderRadius.all(Radius.circular(10))),
         width: 4 * textScaleFactor,
-        color: '#00BCF0'.tryToColor(),
       ),
     );
   }

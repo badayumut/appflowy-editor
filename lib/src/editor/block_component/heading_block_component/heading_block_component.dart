@@ -168,13 +168,10 @@ class _HeadingBlockComponentWidgetState
       ),
     );
 
-    child = Container(
-      color: backgroundColor,
-      child: Padding(
-        key: blockComponentKey,
-        padding: padding,
-        child: child,
-      ),
+    child = Padding(
+      key: blockComponentKey,
+      padding: const EdgeInsets.only(top: 4, bottom: 6),
+      child: child,
     );
 
     child = BlockSelectionContainer(

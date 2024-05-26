@@ -1,6 +1,12 @@
+import 'dart:io';
+
 import 'package:appflowy_editor/appflowy_editor.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../../../zoom_widget/widget_zoom.dart';
 
 class ImageBlockKeys {
   const ImageBlockKeys._();
@@ -56,6 +62,7 @@ class ImageBlockComponentBuilder extends BlockComponentBuilder {
   ImageBlockComponentBuilder({
     super.configuration,
     this.showMenu = false,
+    this.showHero = true,
     this.menuBuilder,
   });
 
@@ -64,6 +71,7 @@ class ImageBlockComponentBuilder extends BlockComponentBuilder {
 
   ///
   final ImageBlockComponentMenuBuilder? menuBuilder;
+  final bool showHero;
 
   @override
   BlockComponentWidget build(BlockComponentContext blockComponentContext) {
@@ -73,12 +81,10 @@ class ImageBlockComponentBuilder extends BlockComponentBuilder {
       node: node,
       showActions: showActions(node),
       configuration: configuration,
-      actionBuilder: (context, state) => actionBuilder(
-        blockComponentContext,
-        state,
-      ),
+      actionBuilder: null,
       showMenu: showMenu,
       menuBuilder: menuBuilder,
+      showHero: showHero,
     );
   }
 
@@ -95,12 +101,14 @@ class ImageBlockComponentWidget extends BlockComponentStatefulWidget {
     super.configuration = const BlockComponentConfiguration(),
     this.showMenu = false,
     this.menuBuilder,
+    this.showHero = true,
   });
 
   /// Whether to show the menu of this block component.
   final bool showMenu;
 
   final ImageBlockComponentMenuBuilder? menuBuilder;
+  final bool showHero;
 
   @override
   State<ImageBlockComponentWidget> createState() =>
@@ -133,83 +141,44 @@ class ImageBlockComponentWidgetState extends State<ImageBlockComponentWidget>
     final alignment = AlignmentExtension.fromString(
       attributes[ImageBlockKeys.align] ?? 'center',
     );
-    final width = attributes[ImageBlockKeys.width]?.toDouble() ??
-        MediaQuery.of(context).size.width;
-    final height = attributes[ImageBlockKeys.height]?.toDouble();
-
-    Widget child = ResizableImage(
-      src: src,
-      width: width,
-      height: height,
-      editable: editorState.editable,
-      alignment: alignment,
-      onResize: (width) {
-        final transaction = editorState.transaction
-          ..updateNode(node, {
-            ImageBlockKeys.width: width,
-          });
-        editorState.apply(transaction);
-      },
-    );
+    Widget child;
+    if (widget.showHero) {
+      child = WidgetZoom(
+        fullScreenDoubleTapZoomScale: 2,
+        onDeletePressed: () {
+          final transaction = editorState.transaction;
+          transaction.deleteNode(node);
+          editorState.apply(transaction);
+          deleteImage(attributes[ImageBlockKeys.url]);
+          Navigator.pop(context);
+        },
+        onSharePressed: () {
+          share(attributes);
+        },
+        heroAnimationTag: attributes[ImageBlockKeys.url],
+        zoomWidget: Image.file(
+          File(src),
+          height: attributes[ImageBlockKeys.height],
+          fit: BoxFit.fitWidth,
+          alignment: alignment,
+        ),
+      );
+    } else {
+      child = ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.file(
+            width: double.infinity,
+            File(src),
+            fit: BoxFit.fitWidth,
+            alignment: alignment,
+          ));
+    }
 
     child = Padding(
       key: imageKey,
-      padding: padding,
+      padding: EdgeInsets.symmetric(vertical: 8),
       child: child,
     );
-
-    child = BlockSelectionContainer(
-      node: node,
-      delegate: this,
-      listenable: editorState.selectionNotifier,
-      remoteSelection: editorState.remoteSelections,
-      blockColor: editorState.editorStyle.selectionColor,
-      supportTypes: const [
-        BlockSelectionType.block,
-      ],
-      child: child,
-    );
-
-    if (widget.showActions && widget.actionBuilder != null) {
-      child = BlockComponentActionWrapper(
-        node: node,
-        actionBuilder: widget.actionBuilder!,
-        child: child,
-      );
-    }
-
-    if (widget.showMenu && widget.menuBuilder != null) {
-      child = MouseRegion(
-        onEnter: (_) => showActionsNotifier.value = true,
-        onExit: (_) {
-          if (!alwaysShowMenu) {
-            showActionsNotifier.value = false;
-          }
-        },
-        hitTestBehavior: HitTestBehavior.opaque,
-        opaque: false,
-        child: ValueListenableBuilder<bool>(
-          valueListenable: showActionsNotifier,
-          builder: (context, value, child) {
-            return Stack(
-              children: [
-                BlockSelectionContainer(
-                  node: node,
-                  delegate: this,
-                  listenable: editorState.selectionNotifier,
-                  remoteSelection: editorState.remoteSelections,
-                  cursorColor: editorState.editorStyle.cursorColor,
-                  selectionColor: editorState.editorStyle.selectionColor,
-                  child: child!,
-                ),
-                if (value) widget.menuBuilder!(widget.node, this),
-              ],
-            );
-          },
-          child: child,
-        ),
-      );
-    }
 
     return child;
   }
@@ -284,6 +253,17 @@ class ImageBlockComponentWidgetState extends State<ImageBlockComponentWidget>
     bool shiftWithBaseOffset = false,
   }) =>
       _renderBox!.localToGlobal(offset);
+
+  void share(attributes) async {
+    await Share.shareXFiles([XFile(attributes[ImageBlockKeys.url])]);
+  }
+
+  void deleteImage(String attribute) async {
+    File imageFile = File((attribute));
+    if (await imageFile.exists()) {
+      await imageFile.delete();
+    }
+  }
 }
 
 extension AlignmentExtension on Alignment {

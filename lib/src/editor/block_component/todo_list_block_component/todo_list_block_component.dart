@@ -145,7 +145,7 @@ class _TodoListBlockComponentWidgetState
     final textDirection = calculateTextDirection(
       layoutDirection: Directionality.maybeOf(context),
     );
-
+    final todoPadding = 8 * MediaQuery.textScaleFactorOf(context);
     Widget child = Container(
       width: double.infinity,
       alignment: alignment,
@@ -166,26 +166,29 @@ class _TodoListBlockComponentWidgetState
                   onTap: checkOrUncheck,
                 ),
           Flexible(
-            child: AppFlowyRichText(
-              key: forwardKey,
-              delegate: this,
-              node: widget.node,
-              editorState: editorState,
-              textAlign: alignment?.toTextAlign,
-              placeholderText: placeholderText,
-              textDirection: textDirection,
-              textSpanDecorator: (textSpan) =>
-                  textSpan.updateTextStyle(textStyle).updateTextStyle(
-                        widget.textStyleBuilder?.call(checked) ??
-                            defaultTextStyle(),
-                      ),
-              placeholderTextSpanDecorator: (textSpan) =>
-                  textSpan.updateTextStyle(
-                placeholderTextStyle,
+            child: Padding(
+              padding: EdgeInsets.only(top: todoPadding, bottom: todoPadding),
+              child: AppFlowyRichText(
+                key: forwardKey,
+                delegate: this,
+                node: widget.node,
+                editorState: editorState,
+                textAlign: alignment?.toTextAlign,
+                placeholderText: placeholderText,
+                textDirection: textDirection,
+                textSpanDecorator: (textSpan) =>
+                    textSpan.updateTextStyle(textStyle).updateTextStyle(
+                          widget.textStyleBuilder?.call(checked) ??
+                              defaultTextStyle(),
+                        ),
+                placeholderTextSpanDecorator: (textSpan) =>
+                    textSpan.updateTextStyle(
+                  placeholderTextStyle,
+                ),
+                cursorColor: editorState.editorStyle.cursorColor,
+                selectionColor: editorState.editorStyle.selectionColor,
+                cursorWidth: editorState.editorStyle.cursorWidth,
               ),
-              cursorColor: editorState.editorStyle.cursorColor,
-              selectionColor: editorState.editorStyle.selectionColor,
-              cursorWidth: editorState.editorStyle.cursorWidth,
             ),
           ),
         ],
